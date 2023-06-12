@@ -63,3 +63,29 @@ npm run serve
 chat-server
 
 IDEA 打开 运行 ChatServerApplication.java
+
+
+
+### 温馨提示
+
+#### 1.
+
+打开chat-server前确认chat-server和Easy-Chat-main文件夹内没有.idea文件夹，如果有就删掉先。
+
+#### 2.
+
+打开chat-server后 左上角文件-项目结构-模块-依赖，删掉所有带“junit”或者“api”关键字的所有依赖，然后在ChatServerApplicationTests.java中找到报错的地方alt+enter。
+
+#### 3.
+
+电脑没装Node.js请直接关闭这个页面去装。
+
+#### 4.
+
+请保证你的项目路径里没有一点中文。
+
+#### 5.
+
+chat-ui跑npm run serve之前记得npm install
+
+
