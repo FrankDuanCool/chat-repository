@@ -70,22 +70,22 @@ IDEA 打开 运行 ChatServerApplication.java
 
 #### 1.
 
-打开chat-server前确认chat-server和Easy-Chat-main文件夹内没有.idea文件夹，如果有就删掉先。
+打开chat-server前确认chat-server和Easy-Chat-main文件夹内没有.idea文件夹，如果有就删掉先。不删可能导致idea找不到项目。
 
 #### 2.
 
-打开chat-server后 左上角文件-项目结构-模块-依赖，删掉所有带“junit”或者“api”关键字的所有依赖，然后在ChatServerApplicationTests.java中找到报错的地方alt+enter。
+打开chat-server后 左上角文件-项目结构-模块-依赖，删掉所有带“junit”或者“api”关键字的所有依赖，然后在ChatServerApplicationTests.java中找到报错的地方alt+enter。不这样做可能导致报错junit不存在（哪怕他已经出现在原来的依赖中了）。
 
 #### 3.
 
-电脑没装Node.js请直接关闭这个页面去装。
+电脑没装Node.js请直接关闭这个页面去装。环境问题不多做解释。
 
 #### 4.
 
-请保证你的项目路径里没有一点中文。
+请保证你的项目路径里没有一点中文。不这样做可能会报index.html重名错误。
 
 #### 5.
 
-chat-ui跑npm run serve之前记得npm install
+chat-ui跑npm run serve之前记得npm install。不这样做你是肯定跑不起来的。
 
 
