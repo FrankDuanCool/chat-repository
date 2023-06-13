@@ -41,8 +41,7 @@ public class WebSocketServer {
         if (!isExist) {
             System.out.println(username + "加入了聊天室");
             sessionMap.put(username, session);
-            String list = setUserList();
-            sendAllMessage(list);
+            sendAllMessage(setUserList());
             showUserList();
 //            try {
 //                System.out.println(list);
@@ -72,7 +71,7 @@ public class WebSocketServer {
             if (sessionMap.entrySet().stream().findFirst().isPresent()){
                 String leader = sessionMap.entrySet().stream().findFirst().get().getKey();
                 try {
-                    sessionMap.get(leader).getBasicRemote().sendText(setupdate());
+                    sessionMap.get(leader).getBasicRemote().sendText(JSON.toJSONString(setupdate()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -92,7 +91,7 @@ public class WebSocketServer {
     public void onMessage(String message) {
             Message msg = JSON.parseObject(message, Message.class);
             String smsg = JSON.toJSONString(msg);
-            sendAllMessage(JSON.toJSONString(msg));
+            sendAllMessage(msg);
 //            try {
 //                System.out.println(smsg);
 //            } catch (Exception e) {
@@ -157,114 +156,104 @@ public class WebSocketServer {
      * 设置接收消息的用户列表
      * @return 用户列表
      */
-    private String setUserList(){
+    private Message setUserList(){
         ArrayList<String> list = new ArrayList<>(sessionMap.keySet());
-        UserList userList = new UserList();
+        Message userList = new Message();
         userList.setUserlist(list);
-        return JSON.toJSONString(userList);
+        return userList;
     }
 
     /**
      * 设置RSA表
      * @return RSA表
      */
-    private String setRSA(){
+    private Message setRSA(){
         Map<String,String> tmp = new HashMap<>();
         for (String username : RSAPKMap.keySet()) {
             tmp.put(username,RSAPKMap.get(username));
         }
-        RSAMap rsamap = new RSAMap();
+        Message rsamap = new Message();
         rsamap.setRsamap(tmp);
-        return JSON.toJSONString(rsamap);
+        return rsamap;
     }
 
     /**
      * 设置DSA表
      * @return DSA表
      */
-    private String setDSA(){
+    private Message setDSA(){
         Map<String,String> tmp = new HashMap<>();
         for (String username : DSAPKMap.keySet()) {
             tmp.put(username,DSAPKMap.get(username));
         }
-        DSAMap dsamap = new DSAMap();
+        Message dsamap = new Message();
         dsamap.setDsamap(tmp);
-        return JSON.toJSONString(dsamap);
+        return dsamap;
     }
 
     /**
      * 生成提醒包（提醒leader更新）
      * @return 带有提醒意味的包
      */
-    private String setupdate(){
-        Update upd = new Update();
+    private Message setupdate(){
+        Message upd = new Message();
         upd.setUpd(1);
-        return JSON.toJSONString(upd);
+        return upd;
     }
 
     /**
      * 发送消息到所有用户种
      * @param message 消息
      */
-    private void sendAllMessage(String message) {
+    private void sendAllMessage(Message message) {
         try {
 //            System.out.println("msg+"+ message);
-            String[] spt = message.split("to");
-            String[] ifupd = message.split("sendto");
-            if (ifupd.length==2){//更新会议密钥
-                String sendto = message.split("sendto")[1];
-                sendto = sendto.substring(3,sendto.length()-2);
-//                System.out.println("key:"+message);
-                sessionMap.get(sendto).getBasicRemote().sendText(message);
+            if (message.getSendto() != null){//更新会议密钥
+                String sendto = message.getSendto();
+                System.out.println(sendto);
+                sessionMap.get(sendto).getBasicRemote().sendText(JSON.toJSONString(message));
             }else {
-                if(spt.length==2){//message是发送消息的操作
-                    String sourcename = message.split("name")[1].split(",")[0];
-                    sourcename = sourcename.substring(3,sourcename.length()-1);
-                    String getto = spt[1].substring(3,spt[1].length()-2);
+                if(message.getSign() != null){//message是发送消息的操作
+                    String sourcename = message.getName();
+                    String getto = message.getTo();
 //                System.out.println(getto);
                     if (getto.equals("All@") || getto.equals("")){//群发
-                        message = message.split("to")[0];
-                        StringBuilder sb = new StringBuilder(message);
-                        sb.append("to\":\"All Users\"}");
-                        message = sb.toString();
+                        message.setTo("All Users");
                         for (Session session : sessionMap.values()) {
-                            session.getBasicRemote().sendText(message);
+                            session.getBasicRemote().sendText(JSON.toJSONString(message));
                         }
                     }else if (sourcename.equals(getto)){//给自己发
-                        sessionMap.get(getto).getBasicRemote().sendText(message);
+                        sessionMap.get(getto).getBasicRemote().sendText(JSON.toJSONString(message));
                     } else {//一对一
-                        sessionMap.get(getto).getBasicRemote().sendText(message);
-                        sessionMap.get(sourcename).getBasicRemote().sendText(message);
+                        sessionMap.get(getto).getBasicRemote().sendText(JSON.toJSONString(message));
+                        sessionMap.get(sourcename).getBasicRemote().sendText(JSON.toJSONString(message));
                     }
                 }else {
-                    if (message.split("type").length!=1){//新用户加入
+                    if (message.getType()!=null){//新用户加入
 //                        System.out.println(message);
-                        String dsapk = message.split("name")[0];
-                        dsapk = dsapk.substring(10,dsapk.length()-3);
+                        String dsapk = message.getDsapk();
                         dsapk = dsapk.replace("\\","");
-                        String name = message.split("name")[1].split("rsapk")[0];
-                        name = name.substring(3,name.length()-3);
-                        String rsapk = message.split("rsapk")[1].split("type")[0];
-                        rsapk = rsapk.substring(3,rsapk.length()-3);
+                        String name = message.getName();
+                        String rsapk = message.getRsapk();
                         rsapk = rsapk.replace("\\r\\n","\r\n");
                         RSAPKMap.put(name, rsapk);
                         DSAPKMap.put(name, dsapk);
 //                        System.out.println(setDSA());
 //                        System.out.println(setRSA());
                         for (Session session : sessionMap.values()) {
-                            session.getBasicRemote().sendText(setDSA());
-                            session.getBasicRemote().sendText(setRSA());
+                            session.getBasicRemote().sendText(JSON.toJSONString(setDSA()));
+                            session.getBasicRemote().sendText(JSON.toJSONString(setRSA()));
                         }
                         if (sessionMap.entrySet().stream().findFirst().isPresent()){
                             String leader = sessionMap.entrySet().stream().findFirst().get().getKey();
-                            sessionMap.get(leader).getBasicRemote().sendText(setupdate());
+                            sessionMap.get(leader).getBasicRemote().sendText(JSON.toJSONString(setupdate()));
                         }
                         showRSAList();
                         showDSAList();
                         return;
                     }
                     for (Session session : sessionMap.values()) {
-                        session.getBasicRemote().sendText(message);
+                        session.getBasicRemote().sendText(JSON.toJSONString(message));
                     }
                 }
             }
