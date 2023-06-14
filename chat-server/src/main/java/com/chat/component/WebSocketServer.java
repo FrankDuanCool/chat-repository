@@ -210,23 +210,28 @@ public class WebSocketServer {
 //            System.out.println("msg+"+ message);
             if (message.getSendto() != null){//更新会议密钥
                 String sendto = message.getSendto();
-                System.out.println(sendto);
+//                System.out.println(sendto);
                 sessionMap.get(sendto).getBasicRemote().sendText(JSON.toJSONString(message));
             }else {
                 if(message.getSign() != null){//message是发送消息的操作
                     String sourcename = message.getName();
-                    String getto = message.getTo();
-//                System.out.println(getto);
-                    if (getto.equals("All@") || getto.equals("")){//群发
-                        message.setTo("All Users");
+                    List<String> getto = message.getTo();
+//                    System.out.println(getto);
+                    if (getto.size()==0){//群发
+                        message.setReceiver("All Users");
                         for (Session session : sessionMap.values()) {
                             session.getBasicRemote().sendText(JSON.toJSONString(message));
                         }
-                    }else if (sourcename.equals(getto)){//给自己发
-                        sessionMap.get(getto).getBasicRemote().sendText(JSON.toJSONString(message));
-                    } else {//一对一
-                        sessionMap.get(getto).getBasicRemote().sendText(JSON.toJSONString(message));
-                        sessionMap.get(sourcename).getBasicRemote().sendText(JSON.toJSONString(message));
+                    }else {
+                        for (String s : getto) {
+                            message.setReceiver(s);
+                            if (s.equals(sourcename)) {//给自己发
+                                sessionMap.get(s).getBasicRemote().sendText(JSON.toJSONString(message));
+                            } else {//一对一
+                                sessionMap.get(s).getBasicRemote().sendText(JSON.toJSONString(message));
+                                sessionMap.get(sourcename).getBasicRemote().sendText(JSON.toJSONString(message));
+                            }
+                        }
                     }
                 }else {
                     if (message.getType()!=null){//新用户加入
