@@ -30,7 +30,7 @@
           </div>
           <div class="message">
             <div class="username">
-              {{ message.name }} -> {{ message.to }}
+              {{ message.name }} -> {{ message.receiver }}
               <span class="time">{{ message.time }}</span>
             </div>
             <div class="text user-text" v-if="nickname === message.name">
@@ -52,8 +52,10 @@
         ></el-input>
         <el-select
           v-model="value"
+          multiple
           placeholder="请选择user"
           @change="$forceUpdate()"
+          clearable=""
         >
           <el-option
             v-for="user in userList"
@@ -61,7 +63,6 @@
             :label="user.id"
             :value="user.toString()"
           ></el-option>
-          <el-option key="0" label="All" value="All@" />
         </el-select>
         <el-button type="primary" class="send-button" @click="sendButton"
           >发送</el-button
