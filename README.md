@@ -88,4 +88,8 @@ IDEA 打开 运行 ChatServerApplication.java
 
 chat-ui跑npm run serve之前记得npm install。不这样做你是肯定跑不起来的。
 
+#### 6.
+
+右键pom.xml->Maven->下载源代码和文档->重新加载项目。说不定啥时候就用上了呢。
+
 
