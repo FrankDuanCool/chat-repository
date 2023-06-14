@@ -131,7 +131,7 @@ onActivated(() => {
     } else if (data.upd) {
       //leader生成新会议密钥
       key = generatekey(32);
-      // console.log(key);
+      console.log("leader发起key rotation:" + key);
       for (const s in rsapktable.value) {
         updatepacket.key = encryptMessage(key, rsapktable.value[s]);
         updatepacket.sendto = s;
@@ -140,13 +140,11 @@ onActivated(() => {
     } else if (data.key) {
       //参会者更新会议密钥
       key = decryptMessage(data.key);
-      // console.log(key);
+      console.log("收到密钥，解密后:" + key);
     } else {
       // 接收消息
       let dsapk = dsapktable.value[data.name];
       dsapk = dsapk.slice(1, -1);
-      // console.log(data.msg);
-      data.msg = decryptSK(data.msg);
       // console.log(data.sign);
       const isValid = nacl.sign.detached.verify(
         Uint8Array.from(data.msg, (c) => c.charCodeAt(0)),
@@ -157,7 +155,13 @@ onActivated(() => {
       );
       // console.log(isValid);
       if (isValid) {
+        console.log("签名有效");
+        console.log("收到未解密消息:" + data.msg);
+        data.msg = decryptSK(data.msg);
+        console.log("消息解密后:" + data.msg);
         messages.value.push(data);
+      } else {
+        console.log("签名验证失败");
       }
 
       // 获取节点
@@ -316,16 +320,18 @@ function toHexString(byteArray) {
 const sendButton = (event: { preventDefault: () => void }) => {
   event.preventDefault();
   if (text.value != null && text.value !== "" && nickname.value != null) {
-    message.sign = toHexString(
-      nacl.sign.detached(
-        Uint8Array.from(text.value, (c) => c.charCodeAt(0)),
-        DSAprivateKey
-      )
-    );
     message.name = nickname.value;
     message.time = formatTime(new Date());
     message.to = value.value;
+    console.log("发送原文:" + text.value);
     message.msg = encryptSK(text.value);
+    message.sign = toHexString(
+      nacl.sign.detached(
+        Uint8Array.from(message.msg, (c) => c.charCodeAt(0)),
+        DSAprivateKey
+      )
+    );
+    console.log("发送密文:" + message.msg);
     socket.send(JSON.stringify(message));
     message.msg = "";
     text.value = "";
